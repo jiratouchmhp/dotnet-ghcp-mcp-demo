@@ -117,6 +117,8 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 // Configure Dependency Injection
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<CategoryService>();
 
 var app = builder.Build();
 
