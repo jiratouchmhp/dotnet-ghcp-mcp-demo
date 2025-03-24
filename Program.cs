@@ -11,6 +11,7 @@ using Serilog;
 using Mapster;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,21 +78,29 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Configure SQLite
+// Configure PostgreSQL with OpenTelemetry
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure OpenTelemetry
 var activitySource = new ActivitySource("Backend.API");
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracerProviderBuilder =>
+    {
         tracerProviderBuilder
             .AddSource(activitySource.Name)
             .SetResourceBuilder(ResourceBuilder.CreateDefault()
                 .AddService("Backend.API"))
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
-            .AddOtlpExporter());
+            .AddOtlpExporter();
+
+        // Add Npgsql instrumentation
+        if (builder.Configuration.GetConnectionString("DefaultConnection") != null)
+        {
+            tracerProviderBuilder.AddNpgsql();
+        }
+    });
 
 // Register ActivitySource
 builder.Services.AddSingleton(activitySource);
@@ -133,7 +142,15 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
+    
+    // Only run migrations for relational databases
+    if (dbContext.Database.ProviderName?.Contains("Microsoft.EntityFrameworkCore.InMemory") != true)
+    {
+        dbContext.Database.Migrate();
+    }
+    
+    // Seed initial data
+    DatabaseSeeder.SeedData(dbContext);
 }
 
 app.Run();

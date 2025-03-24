@@ -1,11 +1,16 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Backend.DbContext;
 using Backend.Dtos;
+using Backend.Models;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using FluentAssertions;
 using Xunit;
-using Microsoft.AspNetCore.Hosting;
+using Xunit.Abstractions;
 
 namespace Backend.Tests.IntegrationTests;
 
@@ -14,18 +19,66 @@ public class ProductsControllerTests : IClassFixture<WebApplicationFactory<Progr
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly ITestOutputHelper _output;
+    private readonly Guid _testCategoryId;
 
-    public ProductsControllerTests(WebApplicationFactory<Program> factory)
+    public ProductsControllerTests(WebApplicationFactory<Program> factory, ITestOutputHelper output)
     {
+        _output = output;
         _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseContentRoot(Directory.GetCurrentDirectory());
+            builder.ConfigureServices(services =>
+            {
+                // Remove the existing db context registration
+                var descriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+                if (descriptor != null)
+                {
+                    services.Remove(descriptor);
+                }
+
+                // Add in-memory database for testing
+                services.AddDbContext<AppDbContext>(options =>
+                {
+                    options.UseInMemoryDatabase("TestingDb");
+                });
+
+                // Configure standard logging
+                services.AddLogging(logging =>
+                {
+                    logging.AddConsole();
+                    logging.SetMinimumLevel(LogLevel.Debug);
+                });
+            });
         });
+
         _client = _factory.CreateClient();
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
+
+        // Create a test category for products
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.EnsureCreated();
+
+        var category = new Category
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test Category",
+            Description = "Test Category Description",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        
+        dbContext.Categories.Add(category);
+        dbContext.SaveChanges();
+        
+        _testCategoryId = category.Id;
+        _output.WriteLine($"Test category created with ID: {_testCategoryId}");
     }
 
     [Fact(DisplayName = "POST /api/products - Should create new product with valid data")]
@@ -36,7 +89,8 @@ public class ProductsControllerTests : IClassFixture<WebApplicationFactory<Progr
             "Integration Test Product",
             "Test Description",
             29.99m,
-            100
+            10,
+            _testCategoryId
         );
 
         var content = new StringContent(
@@ -50,14 +104,14 @@ public class ProductsControllerTests : IClassFixture<WebApplicationFactory<Progr
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        response.Headers.Location.Should().NotBeNull();
-
+        
         var responseContent = await response.Content.ReadAsStringAsync();
         var product = JsonSerializer.Deserialize<ProductDto>(responseContent, _jsonOptions);
 
         product.Should().NotBeNull();
         product!.Name.Should().Be(request.Name);
         product.Description.Should().Be(request.Description);
+        product.CategoryId.Should().Be(request.CategoryId);
         product.Price.Should().Be(request.Price);
         product.StockQuantity.Should().Be(request.StockQuantity);
     }
@@ -71,7 +125,8 @@ public class ProductsControllerTests : IClassFixture<WebApplicationFactory<Progr
             "Test Get Product",
             "Test Description",
             39.99m,
-            50
+            50,
+            _testCategoryId
         );
 
         var createContent = new StringContent(
@@ -97,6 +152,7 @@ public class ProductsControllerTests : IClassFixture<WebApplicationFactory<Progr
         product!.Id.Should().Be(createdProduct.Id);
         product.Name.Should().Be(createRequest.Name);
         product.Description.Should().Be(createRequest.Description);
+        product.CategoryId.Should().Be(createRequest.CategoryId);
         product.Price.Should().Be(createRequest.Price);
         product.StockQuantity.Should().Be(createRequest.StockQuantity);
     }

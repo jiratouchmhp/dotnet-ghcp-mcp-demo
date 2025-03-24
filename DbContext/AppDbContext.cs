@@ -16,6 +16,7 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
     }
 
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<Category> Categories => Set<Category>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,8 +25,22 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Description).HasMaxLength(500);
-            entity.Property(e => e.Price).HasColumnType("REAL"); // SQLite doesn't have decimal, using REAL instead
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("DATETIME('now')"); // SQLite datetime function
+            entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            // Configure relationship with Category
+            entity.HasOne(p => p.Category)
+                  .WithMany(c => c.Products)
+                  .HasForeignKey(p => p.CategoryId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
     }
 
@@ -34,6 +49,19 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
         using var activity = ActivitySource.StartActivity("SaveChanges", ActivityKind.Internal);
         
         foreach (var entry in ChangeTracker.Entries<Product>())
+        {
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    entry.Entity.CreatedAt = DateTime.UtcNow;
+                    break;
+                case EntityState.Modified:
+                    entry.Entity.UpdatedAt = DateTime.UtcNow;
+                    break;
+            }
+        }
+
+        foreach (var entry in ChangeTracker.Entries<Category>())
         {
             switch (entry.State)
             {

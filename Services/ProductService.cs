@@ -72,6 +72,7 @@ public class ProductService
     {
         using var activity = ActivitySource.StartActivity("CreateProduct", ActivityKind.Internal);
         activity?.SetTag("product.name", request.Name);
+        activity?.SetTag("product.category_id", request.CategoryId);
 
         try
         {
@@ -82,6 +83,7 @@ public class ProductService
                 Description = request.Description,
                 Price = request.Price,
                 StockQuantity = request.StockQuantity,
+                CategoryId = request.CategoryId,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -89,7 +91,7 @@ public class ProductService
             var productDto = product.Adapt<ProductDto>();
 
             activity?.SetTag("product.id", product.Id);
-            _logger.LogInformation("Created new product {ProductId}", product.Id);
+            _logger.LogInformation("Created new product {ProductId} in category {CategoryId}", product.Id, product.CategoryId);
 
             return productDto;
         }

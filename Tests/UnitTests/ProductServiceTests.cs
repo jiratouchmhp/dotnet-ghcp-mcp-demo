@@ -27,6 +27,7 @@ public class ProductServiceTests
     {
         // Arrange
         var productId = Guid.NewGuid();
+        var categoryId = Guid.NewGuid();
         var product = new Product
         {
             Id = productId,
@@ -34,6 +35,7 @@ public class ProductServiceTests
             Description = "Test Description",
             Price = 9.99m,
             StockQuantity = 10,
+            CategoryId = categoryId,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -48,6 +50,7 @@ public class ProductServiceTests
         result!.Id.Should().Be(productId);
         result.Name.Should().Be("Test Product");
         result.Description.Should().Be("Test Description");
+        result.CategoryId.Should().Be(categoryId);
         result.Price.Should().Be(9.99m);
         result.StockQuantity.Should().Be(10);
     }
@@ -71,11 +74,13 @@ public class ProductServiceTests
     public async Task CreateProduct_WithValidInput_ReturnsNewProduct()
     {
         // Arrange
+        var categoryId = Guid.NewGuid();
         var request = new CreateProductRequest(
             "New Product",
             "New Description",
             19.99m,
-            5
+            5,
+            categoryId
         );
 
         _mockRepository.Setup(x => x.CreateAsync(It.IsAny<Product>(), It.IsAny<CancellationToken>()))
@@ -88,12 +93,14 @@ public class ProductServiceTests
         result.Should().NotBeNull();
         result.Name.Should().Be("New Product");
         result.Description.Should().Be("New Description");
+        result.CategoryId.Should().Be(categoryId);
         result.Price.Should().Be(19.99m);
         result.StockQuantity.Should().Be(5);
 
         _mockRepository.Verify(x => x.CreateAsync(
             It.Is<Product>(p => p.Name == request.Name 
                 && p.Description == request.Description 
+                && p.CategoryId == request.CategoryId
                 && p.Price == request.Price 
                 && p.StockQuantity == request.StockQuantity),
             It.IsAny<CancellationToken>()),
