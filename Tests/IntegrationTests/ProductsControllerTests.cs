@@ -84,6 +84,8 @@ public class ProductsControllerTests : IClassFixture<WebApplicationFactory<Progr
     [Fact(DisplayName = "POST /api/products - Should create new product with valid data")]
     public async Task CreateProduct_WithValidData_ReturnsCreatedProduct()
     {
+        _output.WriteLine("Starting CreateProduct test with valid data");
+        
         // Arrange
         var request = new CreateProductRequest(
             "Integration Test Product",
@@ -92,6 +94,7 @@ public class ProductsControllerTests : IClassFixture<WebApplicationFactory<Progr
             10,
             _testCategoryId
         );
+        _output.WriteLine($"Request data: {JsonSerializer.Serialize(request)}");
 
         var content = new StringContent(
             JsonSerializer.Serialize(request),
@@ -100,12 +103,16 @@ public class ProductsControllerTests : IClassFixture<WebApplicationFactory<Progr
         );
 
         // Act
+        _output.WriteLine("Sending POST request to /api/products");
         var response = await _client.PostAsync("/api/products", content);
+        _output.WriteLine($"Received response with status code: {response.StatusCode}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         
         var responseContent = await response.Content.ReadAsStringAsync();
+        _output.WriteLine($"Response content: {responseContent}");
+        
         var product = JsonSerializer.Deserialize<ProductDto>(responseContent, _jsonOptions);
 
         product.Should().NotBeNull();
@@ -114,11 +121,14 @@ public class ProductsControllerTests : IClassFixture<WebApplicationFactory<Progr
         product.CategoryId.Should().Be(request.CategoryId);
         product.Price.Should().Be(request.Price);
         product.StockQuantity.Should().Be(request.StockQuantity);
+        _output.WriteLine($"Successfully created product with ID: {product.Id}");
     }
 
     [Fact(DisplayName = "GET /api/products/{id} - Should return existing product")]
     public async Task GetProduct_WithExistingProduct_ReturnsProduct()
     {
+        _output.WriteLine("Starting GetProduct test for existing product");
+        
         // Arrange
         // First create a product
         var createRequest = new CreateProductRequest(
@@ -128,6 +138,7 @@ public class ProductsControllerTests : IClassFixture<WebApplicationFactory<Progr
             50,
             _testCategoryId
         );
+        _output.WriteLine($"Creating test product with data: {JsonSerializer.Serialize(createRequest)}");
 
         var createContent = new StringContent(
             JsonSerializer.Serialize(createRequest),
@@ -137,15 +148,21 @@ public class ProductsControllerTests : IClassFixture<WebApplicationFactory<Progr
 
         var createResponse = await _client.PostAsync("/api/products", createContent);
         var createResponseContent = await createResponse.Content.ReadAsStringAsync();
+        _output.WriteLine($"Created product response: {createResponseContent}");
+        
         var createdProduct = JsonSerializer.Deserialize<ProductDto>(createResponseContent, _jsonOptions);
 
         // Act
-        var response = await _client.GetAsync($"/api/products/{createdProduct!.Id}");
+        _output.WriteLine($"Fetching product with ID: {createdProduct!.Id}");
+        var response = await _client.GetAsync($"/api/products/{createdProduct.Id}");
+        _output.WriteLine($"Get response status code: {response.StatusCode}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var responseContent = await response.Content.ReadAsStringAsync();
+        _output.WriteLine($"Get response content: {responseContent}");
+        
         var product = JsonSerializer.Deserialize<ProductDto>(responseContent, _jsonOptions);
 
         product.Should().NotBeNull();
@@ -155,15 +172,21 @@ public class ProductsControllerTests : IClassFixture<WebApplicationFactory<Progr
         product.CategoryId.Should().Be(createRequest.CategoryId);
         product.Price.Should().Be(createRequest.Price);
         product.StockQuantity.Should().Be(createRequest.StockQuantity);
+        _output.WriteLine("Product retrieval test completed successfully");
     }
 
     [Fact(DisplayName = "GET /api/products/{id} - Should return 404 for non-existing product")]
     public async Task GetProduct_WithNonExistingId_ReturnsNotFound()
     {
+        var nonExistingId = Guid.NewGuid();
+        _output.WriteLine($"Testing GET request for non-existing product ID: {nonExistingId}");
+        
         // Act
-        var response = await _client.GetAsync($"/api/products/{Guid.NewGuid()}");
+        var response = await _client.GetAsync($"/api/products/{nonExistingId}");
+        _output.WriteLine($"Received response with status code: {response.StatusCode}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        _output.WriteLine("Successfully verified 404 Not Found response");
     }
 }
