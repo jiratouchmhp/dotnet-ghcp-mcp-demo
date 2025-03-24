@@ -130,6 +130,73 @@ This project includes custom instructions for GitHub Copilot to ensure consisten
    - Includes required logging and tracing
    - Proper exception handling
 
+## 📊 Observability & Monitoring
+### OpenTelemetry Integration
+1. **Tracing Setup**:
+```csharp
+services.AddOpenTelemetry()
+    .WithTracing(builder => builder
+        .AddAspNetCoreInstrumentation()
+        .AddEntityFrameworkCoreInstrumentation()
+        .AddNpgsql()
+        .AddOtlpExporter());
+```
+
+2. **Key Metrics**:
+- HTTP request durations
+- Database query performance
+- Endpoint response times
+- Error rates and types
+
+3. **Custom Activity Sources**:
+- Service layer operations
+- Repository operations
+- Business logic execution
+
+### Structured Logging with Serilog
+1. **Log Categories**:
+- Information: Standard operation logs
+- Warning: Potential issues
+- Error: Exception details
+- Debug: Development information
+
+2. **Context Enrichment**:
+- Correlation IDs
+- User information
+- Request details
+- Performance metrics
+
+## 🔐 Validation & Security
+### FluentValidation Implementation
+1. **Request Validation**:
+```csharp
+public class CreateProductRequestValidator : AbstractValidator<CreateProductRequest>
+{
+    public CreateProductRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Price).GreaterThan(0);
+        RuleFor(x => x.CategoryId).NotEmpty();
+    }
+}
+```
+
+2. **Validation Pipeline**:
+- Automatic validation triggering
+- Custom error responses
+- Localized error messages
+
+### API Security
+1. **Input Sanitization**:
+- Request validation
+- Content-type validation
+- File upload restrictions
+
+2. **Authentication & Authorization**:
+- JWT token validation
+- Role-based access control
+- API key authentication
+
 ## 🐘 PostgreSQL Integration
 ### Database Setup
 1. **Using Docker Compose**:
@@ -243,6 +310,21 @@ GitHub Copilot enhances development with MCP server by:
    - Enable connection pooling
    - Use appropriate transaction isolation levels
    - Implement query optimization
+
+## 🚀 API Endpoints
+### Products
+- GET `/api/products` - List all products
+- GET `/api/products/{id}` - Get product by ID
+- POST `/api/products` - Create new product
+- PUT `/api/products/{id}` - Update product
+- DELETE `/api/products/{id}` - Delete product
+
+### Categories
+- GET `/api/categories` - List all categories
+- GET `/api/categories/{id}` - Get category by ID
+- POST `/api/categories` - Create new category
+- PUT `/api/categories/{id}` - Update category
+- DELETE `/api/categories/{id}` - Delete category
 
 ## 🏗 Project Structure
 
