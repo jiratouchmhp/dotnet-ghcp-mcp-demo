@@ -1,0 +1,63 @@
+# .NET Core build folders
+bin/
+obj/
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+.vs/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
+# Visual Studio for Mac
+.idea/
+
+# Rider
+.idea/
+*.sln.iml
+
+# User secrets
+appsettings.Development.json
+**/secrets.json
+
+# Temporary files
+*.swp
+*.*~
+project.lock.json
+.DS_Store
+*.pyc
+
+# Debug files
+*.log
+npm-debug.log*
+
+# Test Results
+TestResults/
+[Cc]overage/
+*.coverage
+*.coveragexml
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+msbuild.log
+msbuild.err
+msbuild.wrn
