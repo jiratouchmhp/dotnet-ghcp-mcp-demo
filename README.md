@@ -283,7 +283,7 @@ mcp logs postgres
         "--rm",
         "--network=host",
         "mcp/postgres",
-        "postgresql://{username}:{password}@localhost:5432/backenddb"
+        "postgresql://{username}:{password}@localhost:5432/{dbname}"
       ]
     }
   }
