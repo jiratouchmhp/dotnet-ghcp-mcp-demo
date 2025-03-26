@@ -1,13 +1,13 @@
 # .NET 8 Clean Architecture Backend with GitHub Copilot Demo
 
-This project demonstrates a .NET 8 Web API implementation following Clean Architecture principles, integrated with GitHub Copilot for enhanced development experience.
+This project demonstrates a .NET 8 Web API implementation following Clean Architecture principles, integrated with MCP for direct PostgreSQL access and GitHub Copilot for enhanced development experience.
 
 ## 🚀 Project Overview
 
 This backend application is built with:
 - .NET 8
 - ASP.NET Core Web API
-- Entity Framework Core with SQLite
+- Entity Framework Core with PostgreSQL
 - Clean Architecture
 - MediatR for CQRS
 - FluentValidation
@@ -15,11 +15,14 @@ This backend application is built with:
 - OpenTelemetry
 - Structured Logging (Serilog)
 - xUnit for testing
+- MCP Server for PostgreSQL access
 
 ## 🛠 Prerequisites
 
 - .NET 8 SDK
 - Visual Studio Code
+- Docker Desktop
+- MCP CLI tool
 - GitHub Copilot extension
 - Git
 
@@ -31,17 +34,27 @@ git clone <your-repository-url>
 cd Backend
 ```
 
-2. Restore dependencies:
+2. Start PostgreSQL using Docker:
+```bash
+docker-compose up -d
+```
+
+3. Start MCP server:
+```bash
+mcp start
+```
+
+4. Restore dependencies:
 ```bash
 dotnet restore
 ```
 
-3. Apply database migrations:
+5. Apply database migrations:
 ```bash
 dotnet ef database update
 ```
 
-4. Run the application:
+6. Run the application:
 ```bash
 dotnet run
 ```
@@ -197,24 +210,75 @@ public class CreateProductRequestValidator : AbstractValidator<CreateProductRequ
 - Role-based access control
 - API key authentication
 
-## 🐘 PostgreSQL Integration
-### Database Setup
-1. **Using Docker Compose**:
+## 🐘 PostgreSQL & MCP Integration
+
+### MCP Server Setup
+
+1. Install MCP CLI:
 ```bash
-docker-compose up -d
+npm install -g @vscode/mcp-cli
 ```
 
-2. **Connection String**:
-The application is configured to connect to PostgreSQL at:
-```
-postgresql://postgres:postgres123@localhost:5432/backenddb
+2. Configure MCP (.vscode/mcp.json):
+```json
+{
+  "servers": {
+    "postgres": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--network=host",
+        "mcp/postgres",
+        "postgresql://postgres:postgres123@localhost:5432/backenddb"
+      ]
+    }
+  }
+}
 ```
 
-3. **Migrations**:
+3. Start MCP server:
 ```bash
-dotnet ef migrations add InitialCreate
-dotnet ef database update
+mcp start
 ```
+
+4. Connect to PostgreSQL through MCP:
+```bash
+mcp connect postgres
+```
+
+### Using MCP for Database Operations
+
+1. Execute read-only queries:
+```sql
+-- Example: List all products with their categories
+SELECT p.*, c.Name as CategoryName 
+FROM Products p 
+JOIN Categories c ON p.CategoryId = c.Id;
+```
+
+2. Monitor database activity:
+```bash
+mcp logs postgres
+```
+
+### Best Practices for MCP Usage
+
+1. **Query Guidelines**:
+   - Use read-only queries for data retrieval
+   - Implement proper indexing
+   - Follow SQL optimization practices
+
+2. **Security**:
+   - Never expose sensitive data in queries
+   - Use parameterized queries when possible
+   - Follow least privilege principle
+
+3. **Performance**:
+   - Keep queries focused and specific
+   - Use appropriate WHERE clauses
+   - Optimize JOIN operations
 
 ## 🖥️ MCP Server Configuration
 ### Setup and Configuration

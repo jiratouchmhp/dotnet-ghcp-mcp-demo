@@ -1,0 +1,43 @@
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "db-password",
+      "password": true,
+      "description": "PostgreSQL Database Password"
+    },
+    {
+      "type": "promptString",
+      "id": "github-token",
+      "description": "GitHub Personal Access Token",
+      "password": true,
+    }
+  ],
+  "servers": {
+    "postgres": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--network=host",
+        "mcp/postgres",
+        "postgresql://postgres:${input:db-password}@localhost:5432/backenddb"
+      ]
+    },
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "mcp/github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github-token}"
+      }
+    }
+  }
+}
