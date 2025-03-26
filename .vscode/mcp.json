@@ -38,6 +38,12 @@
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github-token}"
       }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
     }
   }
 }

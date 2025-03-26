@@ -214,12 +214,7 @@ public class CreateProductRequestValidator : AbstractValidator<CreateProductRequ
 
 ### MCP Server Setup
 
-1. Install MCP CLI:
-```bash
-npm install -g @vscode/mcp-cli
-```
-
-2. Configure MCP (.vscode/mcp.json):
+1. Configure MCP (.vscode/mcp.json):
 ```json
 {
   "servers": {
@@ -238,15 +233,9 @@ npm install -g @vscode/mcp-cli
 }
 ```
 
-3. Start MCP server:
-```bash
-mcp start
-```
+2. Start MCP server:
 
-4. Connect to PostgreSQL through MCP:
-```bash
-mcp connect postgres
-```
+3. Connect to PostgreSQL through MCP:
 
 ### Using MCP for Database Operations
 
