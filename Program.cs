@@ -119,6 +119,8 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<CustomerService>();
 
 var app = builder.Build();
 
@@ -145,8 +147,9 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     
-    // Only run migrations for relational databases
-    if (dbContext.Database.ProviderName?.Contains("Microsoft.EntityFrameworkCore.InMemory") != true)
+    // Skip migrations if running in test environment
+    var skipMigrations = builder.Configuration["SkipMigrations"] == "true";
+    if (!skipMigrations && dbContext.Database.ProviderName?.Contains("Microsoft.EntityFrameworkCore.InMemory") != true)
     {
         dbContext.Database.Migrate();
     }

@@ -17,6 +17,7 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
 
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Customer> Customers { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +42,27 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
+
+        modelBuilder.Entity<Customer>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Email).IsUnique();
+            
+            entity.Property(e => e.FirstName)
+                .IsRequired()
+                .HasMaxLength(100);
+                
+            entity.Property(e => e.LastName)
+                .IsRequired()
+                .HasMaxLength(100);
+                
+            entity.Property(e => e.Email)
+                .IsRequired()
+                .HasMaxLength(255);
+                
+            entity.Property(e => e.PhoneNumber)
+                .HasMaxLength(20);
         });
     }
 
