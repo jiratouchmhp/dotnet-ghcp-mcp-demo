@@ -253,6 +253,56 @@ public static class DatabaseSeeder
 
         context.AddRange(products);
         context.SaveChanges();
+        
+        // Create sample payments if there are none
+        if (!context.Payments.Any())
+        {
+            var payments = new List<Payment>
+            {
+                new Payment
+                {
+                    Amount = 99.99m,
+                    Currency = "USD",
+                    Status = "Completed",
+                    PaymentDate = DateTime.UtcNow.AddDays(-5),
+                    UserId = 1,
+                    TransactionId = "TXN-12345",
+                    PaymentMethod = "Credit Card",
+                    Description = "Monthly subscription payment",
+                    CreatedAt = DateTime.UtcNow.AddDays(-5),
+                    UpdatedAt = DateTime.UtcNow.AddDays(-5)
+                },
+                new Payment
+                {
+                    Amount = 199.50m,
+                    Currency = "USD",
+                    Status = "Completed",
+                    PaymentDate = DateTime.UtcNow.AddDays(-3),
+                    UserId = 2,
+                    TransactionId = "TXN-23456",
+                    PaymentMethod = "PayPal",
+                    Description = "Premium package purchase",
+                    CreatedAt = DateTime.UtcNow.AddDays(-3),
+                    UpdatedAt = DateTime.UtcNow.AddDays(-3)
+                },
+                new Payment
+                {
+                    Amount = 49.99m,
+                    Currency = "USD",
+                    Status = "Pending",
+                    PaymentDate = DateTime.UtcNow.AddDays(-1),
+                    UserId = 1,
+                    TransactionId = "TXN-34567",
+                    PaymentMethod = "Bank Transfer",
+                    Description = "Add-on service purchase",
+                    CreatedAt = DateTime.UtcNow.AddDays(-1),
+                    UpdatedAt = DateTime.UtcNow.AddDays(-1)
+                }
+            };
+            
+            context.Payments.AddRange(payments);
+            context.SaveChanges();
+        }
     }
 
     private static Product CreateProduct(string name, string description, decimal price, int stockQuantity, Category category)

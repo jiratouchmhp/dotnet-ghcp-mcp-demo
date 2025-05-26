@@ -48,6 +48,8 @@ public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProg
             // Register repositories and services
             services.AddScoped<ICustomerRepository, CustomerRepository>();
             services.AddScoped<CustomerService>();
+            services.AddScoped<IPaymentRepository, PaymentRepository>();
+            services.AddScoped<PaymentService>();
 
             // Create a new service provider
             var serviceProvider = services.BuildServiceProvider();
