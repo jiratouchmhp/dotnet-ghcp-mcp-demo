@@ -18,6 +18,7 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Customer> Customers { get; set; } = null!;
+    public DbSet<Payment> Payments { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -64,6 +65,38 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
             entity.Property(e => e.PhoneNumber)
                 .HasMaxLength(20);
         });
+
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            entity.Property(e => e.Amount)
+                .IsRequired()
+                .HasColumnType("decimal(18,2)");
+                
+            entity.Property(e => e.Currency)
+                .IsRequired()
+                .HasMaxLength(3);
+                
+            entity.Property(e => e.Status)
+                .IsRequired()
+                .HasMaxLength(50);
+                
+            entity.Property(e => e.PaymentDate)
+                .IsRequired();
+                
+            entity.Property(e => e.TransactionReference)
+                .HasMaxLength(100);
+                
+            entity.Property(e => e.PaymentMethod)
+                .HasMaxLength(50);
+                
+            entity.Property(e => e.Description)
+                .HasMaxLength(500);
+                
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -89,6 +122,20 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
             {
                 case EntityState.Added:
                     entry.Entity.CreatedAt = DateTime.UtcNow;
+                    break;
+                case EntityState.Modified:
+                    entry.Entity.UpdatedAt = DateTime.UtcNow;
+                    break;
+            }
+        }
+
+        foreach (var entry in ChangeTracker.Entries<Payment>())
+        {
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    entry.Entity.CreatedAt = DateTime.UtcNow;
+                    entry.Entity.UpdatedAt = DateTime.UtcNow;
                     break;
                 case EntityState.Modified:
                     entry.Entity.UpdatedAt = DateTime.UtcNow;
